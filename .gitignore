@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+!.env.example
+*.log
+data/runtime/*
+!data/runtime/.gitkeep
+data/index/*
+!data/index/.gitkeep
+.pytest_cache/
+
+logs/
+
+data/processed/embedding_cache.json

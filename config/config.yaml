@@ -1,0 +1,17 @@
+app:
+  title: CarePlan - AI Nursing Assistant
+  version: 0.1.0
+retrieval:
+  top_k: 8
+  max_context_characters: 18000
+  corpus_path: data/processed/corpus_full_v2.json
+  vector_index_path: data/index/knowledge_vectors.json
+llm:
+  provider: nvidia
+  model: nvidia/nemotron-3-ultra-550b-a55b
+  base_url: https://integrate.api.nvidia.com/v1
+  max_tokens: 4000
+  timeout_seconds: 150
+memory:
+  max_turns: 10
+  persist_cases: false

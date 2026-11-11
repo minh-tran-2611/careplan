@@ -1,0 +1,13 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+logs
+**/__pycache__
+**/*.pyc
+tests
+data/processed/embedding_cache.json
+*.cmd
+*.ps1
+DEPLOY.md

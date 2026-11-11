@@ -1,0 +1,30 @@
+# Render Blueprint: New > Blueprint > chọn repo này. Các biến sync:false sẽ được hỏi khi tạo.
+services:
+  - type: web
+    name: careplan
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /api/status
+    autoDeploy: true
+    envVars:
+      - key: LLM_PROVIDER
+        value: nvidia
+      - key: LLM_MODEL
+        value: nvidia/nemotron-3-ultra-550b-a55b
+      - key: LLM_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: EMBEDDING_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: EMBEDDING_MODEL
+        sync: false
+      - key: EMBEDDING_API_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: QDRANT_COLLECTION
+        sync: false

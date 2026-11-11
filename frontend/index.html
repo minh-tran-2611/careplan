@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CarePlan · Trợ lý tra cứu điều dưỡng</title>
+<meta name="description" content="Chatbot tra cứu NANDA – NIC – NOC có trích nguồn, kèm nhật ký theo dõi diễn biến.">
+<link rel="stylesheet" href="/styles.css">
+<script defer src="/app.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="/"><span class="brand-icon" data-icon="heart"></span><span>careplan<span class="brand-dot">.</span><small>TRA CỨU NANDA · NIC · NOC</small></span></a>
+  <div class="topbar-tools">
+    <label class="chapter-filter"><span>Quy trình</span>
+      <select id="chapter"><option value="">Tất cả quy trình</option></select>
+    </label>
+    <span class="status" id="status"><i></i><span>Đang kiểm tra AI</span></span>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="chat-panel" aria-label="Hội thoại">
+    <div class="panel-head">
+      <div><h2>Hỏi đáp có nguồn</h2><p>Hỏi đáp trích từ sách. Gõ “lập bảng kế hoạch…” để nhận bảng kế hoạch điều dưỡng.</p></div>
+      <button class="ghost-button" id="new-chat"><span data-icon="plus"></span>Cuộc trò chuyện mới</button>
+    </div>
+    <div class="chat-area" id="chat-area">
+      <div class="welcome" id="welcome">
+        <div class="welcome-symbol" data-icon="sparkles"></div>
+        <h3>Hỏi bất cứ điều gì trong quy trình điều dưỡng</h3>
+        <p>Chatbot chỉ trả lời từ tài liệu NANDA – NIC – NOC (21 quy trình, 373 trang). Nhật ký bên phải được gửi kèm làm bối cảnh nếu bạn bật.</p>
+        <div class="suggestions">
+          <button data-q="Can thiệp điều dưỡng cho người bệnh đợt cấp COPD bị khó thở gồm những gì?">Can thiệp khi người bệnh COPD khó thở</button>
+          <button data-q="Dựa vào nhật ký diễn biến, cần theo dõi thêm những dấu hiệu gì theo tài liệu?">Theo nhật ký, cần theo dõi thêm gì?</button>
+          <button data-q="Lập bảng kế hoạch điều dưỡng cho người bệnh theo nhật ký diễn biến." data-mode="plan">Lập bảng kế hoạch theo nhật ký</button>
+          <button data-q="Chăm sóc vị trí chọc mạch sau can thiệp động mạch vành qua da như thế nào?">Chăm sóc sau can thiệp mạch vành</button>
+        </div>
+      </div>
+      <div id="messages"></div>
+    </div>
+    <div class="error" id="error" role="alert" hidden></div>
+    <form class="composer" id="composer">
+      <textarea id="question" rows="2" maxlength="3000" placeholder="Nhập câu hỏi… (Enter để gửi, Shift+Enter xuống dòng)" required></textarea>
+      <button class="plan-button" id="plan-button" type="button" title="Lập bảng kế hoạch điều dưỡng từ câu đang gõ và nhật ký"><span data-icon="table"></span>Lập bảng kế hoạch</button>
+      <button class="send" id="send" type="submit" aria-label="Gửi"><span data-icon="send"></span></button>
+    </form>
+    <p class="disclaimer">Bản tra cứu tham khảo từ OCR chưa hiệu đính. Không thay thế y lệnh và đánh giá lâm sàng.</p>
+  </section>
+
+  <aside class="journal-panel" aria-label="Thông tin người bệnh">
+    <div class="side-tabs" role="tablist">
+      <button class="active" role="tab" aria-selected="true" data-side="journal"><span data-icon="note"></span>Nhật ký diễn biến <b class="badge" id="journal-badge" hidden></b></button>
+      <button role="tab" aria-selected="false" data-side="orders"><span data-icon="clipboard"></span>Y lệnh nội trú <b class="badge dot" id="orders-badge" hidden></b></button>
+    </div>
+
+    <div class="side-view" id="journal-view">
+      <form class="journal-form" id="journal-form">
+        <label>Thời điểm<input type="datetime-local" id="journal-time" required></label>
+        <label>Diễn biến<textarea id="journal-text" rows="4" maxlength="2000" placeholder="VD: 14:00 — Tỉnh, than mệt. SpO2 93% khí phòng, thở 24 l/p. Ho đàm trắng. Ăn được 1/2 suất." required></textarea></label>
+        <button class="solid-button" type="submit"><span data-icon="plus"></span>Thêm ghi chép</button>
+        <p class="hint" id="journal-count">Chưa có ghi chép. Không ghi họ tên, mã bệnh nhân, số điện thoại.</p>
+      </form>
+      <ol class="journal-list" id="journal-list"></ol>
+      <div class="journal-footer">
+        <label class="toggle"><input type="checkbox" id="use-journal" checked><span>Gửi nhật ký kèm câu hỏi</span></label>
+        <div class="journal-actions">
+          <button class="ghost-button" id="export-journal"><span data-icon="download"></span>Xuất .txt</button>
+          <button class="ghost-button danger" id="clear-journal"><span data-icon="trash"></span>Xóa hết</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-view" id="orders-view" hidden>
+      <div class="orders-form">
+        <label>Ngày giờ y lệnh<input type="datetime-local" id="orders-time"></label>
+        <label class="grow">Y lệnh nội trú hiện hành
+          <textarea id="orders-text" maxlength="6000" placeholder="Dán hoặc gõ y lệnh của bác sĩ, ví dụ:&#10;- Chăm sóc cấp II&#10;- Chế độ ăn: cơm mềm, ít muối&#10;- Thở oxy kính mũi 2 l/phút, duy trì SpO2 88–92%&#10;- Thuốc: … (ghi đúng như y lệnh)&#10;- Xét nghiệm: công thức máu, khí máu sáng mai&#10;- Theo dõi: mạch, HA, nhịp thở, SpO2 mỗi 3 giờ"></textarea>
+        </label>
+        <p class="hint"><span id="orders-count">0</span>/6000 ký tự · Tự lưu trong trình duyệt. Chatbot chỉ nhắc lại đúng y lệnh, không tự sửa liều; nếu thấy không khớp diễn biến sẽ gợi ý trao đổi với bác sĩ.</p>
+      </div>
+      <div class="journal-footer">
+        <label class="toggle"><input type="checkbox" id="use-orders" checked><span>Gửi y lệnh kèm câu hỏi</span></label>
+        <div class="journal-actions">
+          <button class="ghost-button danger" id="clear-orders"><span data-icon="trash"></span>Xóa y lệnh</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<div class="modal-backdrop" id="modal" hidden>
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <header><div><span class="eyebrow" id="modal-eyebrow"></span><h3 id="modal-title"></h3></div><button class="icon-button" id="modal-close" aria-label="Đóng"><span data-icon="x"></span></button></header>
+    <div class="modal-flags" id="modal-flags" hidden></div>
+    <div class="modal-tabs"><button class="active" data-view="text">Văn bản OCR</button><button data-view="image">Ảnh trang gốc</button></div>
+    <div class="modal-body" id="modal-text"></div>
+    <div class="modal-body image" id="modal-image" hidden></div>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+</body>
+</html>
